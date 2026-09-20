@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "Grafana Lens",
+  "version": "1.0.0",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAla9Jcre3eVswTWcrt55fk84z7f7ZfDNIpMRX74VidvHc5fqkc5YLt1pYleoAP/MSqwlZ8Is2B476LiJO79L988vkX39N9ZsII0tZp/TNbHfJ687R16ndDJSIACErcBSxzqoOVsfH+Skb4Ee7oARNxuR4+/ekswiSa56U3HIPJZW8+4cuYlPBnI7DXhlxhjfnpGlQxR+i3/5Bc92OG2P8PRqGwCC7YiQP+fID/U2BaW9IpdEiZcw8EBZIredDWPIapv68rUS3rul/n22uvxIegr9ge1AY6dJGruflkSJgy9/frrEcqxpoe6vA33ptQ5hfxmhbp96viJOjC7hyMPXGwQIDAQAB",
+  "permissions": ["activeTab", "tabs", "storage", "offscreen", "scripting"],
+  "host_permissions": ["http://127.0.0.1/*", "http://localhost/*"],
+  "optional_host_permissions": ["http://*/*", "https://*/*"],
+  "background": {"service_worker": "sw.js", "type": "module"},
+  "action": {"default_popup": "popup/popup.html"},
+  "options_page": "options/options.html",
+  "web_accessible_resources": [
+    {"resources": ["content/page-query.js"], "matches": ["http://*/*", "https://*/*"]}
+  ]
+}

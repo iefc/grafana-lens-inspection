@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "grafana-lens-bridge"
+version = "1.0.0"
+description = "Local bridge for Grafana Lens: MCP STDIO + WebSocket + Ark analysis"
+requires-python = ">=3.11"
+dependencies = [
+  "mcp>=1.2",
+  "fastapi>=0.115",
+  "uvicorn>=0.32",
+  "httpx>=0.27",
+  "pydantic>=2.9",
+  "jinja2>=3.1",
+  "tenacity>=8.5",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.3",
+  "pytest-asyncio>=0.24",
+  "websockets>=13",
+]
+
+[project.scripts]
+grafana-lens-bridge = "grafana_lens.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+grafana_lens = ["prompts/*.txt"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+pythonpath = ["src"]
+filterwarnings = [
+  "ignore:The `anyio\\.abc\\.BlockingPortal alias is deprecated.*:DeprecationWarning",
+]

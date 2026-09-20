@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>Grafana Lens</title>
+  <style>
+    body { width: 280px; font: 13px/1.5 -apple-system, sans-serif; margin: 12px; }
+    .row { margin: 8px 0; }
+    .label { color: #666; }
+    #status, #bridgeStatus, #pairMessage { word-break: break-word; }
+    button { width: 100%; padding: 6px; margin: 3px 0; }
+    #pairMessage { min-height: 1.5em; }
+  </style>
+</head>
+<body>
+  <div class="row"><strong>Grafana Lens</strong></div>
+  <div class="row">当前域：<span id="origin">-</span></div>
+  <div class="row">授权状态：<span id="status">-</span></div>
+  <div class="row"><button id="grant" type="button">授权当前 Grafana 域</button></div>
+  <div class="row"><button id="revoke" type="button">移除授权</button></div>
+  <hr />
+  <div class="row">桥连接：<span id="bridgeStatus">读取中…</span></div>
+  <div class="row"><button id="pair" type="button">一键配对本地桥</button></div>
+  <div class="row" id="pairMessage" role="status"></div>
+  <div class="row"><a href="../options/options.html">选项（手动配置）</a></div>
+  <script src="popup.js" type="module"></script>
+</body>
+</html>

@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ dashboard.title }} · Grafana Lens 巡检报告</title>
+<style>{{ css }}</style>
+</head>
+<body class="tone-{{ tone }}">
+<a class="skip" href="#risks">跳到风险识别</a>
+<header class="mast">
+  <div class="mast-row">
+    <p class="stamp">内部 · 截图可能含敏感像素</p>
+    <nav class="toc no-print" aria-label="本页章节">
+      <a href="#overview">概览</a>
+      <a href="#risks">风险</a>
+      <a href="#details">详情</a>
+      <a href="#actions">建议</a>
+    </nav>
+    <button type="button" class="print-btn no-print" onclick="window.print()">打印 / 导出 PDF</button>
+  </div>
+  <h1>{{ dashboard.title }}</h1>
+  <p class="meta">
+    <span>巡检报告</span>
+    <span class="dot" aria-hidden="true"></span>
+    <span class="mono">{{ from_time }} → {{ to_time }}</span>
+    <span class="dot" aria-hidden="true"></span>
+    <span class="mono muted">{{ run_id }}</span>
+  </p>
+</header>
+
+<section class="block" id="overview" aria-labelledby="overview-heading">
+  <h2 id="overview-heading">1. 巡检概览</h2>
+  <div class="overview-split">
+    <div class="gauge" role="img" aria-label="环境评分 {{ summary.score if summary.score is not none else '未评分' }}">
+      {{ score_svg }}
+      <p class="gauge-k">环境评分</p>
+      {% if summary.score is none %}
+      <p class="gauge-h muted">待综述</p>
+      {% elif summary.score_source == 'findings' %}
+      <p class="gauge-h muted">按风险回退</p>
+      {% endif %}
+    </div>
+    <div class="kpi" role="list">
+      <div class="kpi-cell" role="listitem">
+        <span class="kpi-k">检查项</span>
+        <span class="kpi-v mono">{{ summary.total }}</span>
+        <span class="kpi-h muted">已完成 {{ summary.done }}</span>
+      </div>
+      <div class="kpi-cell{% if summary.failed %} hot high{% endif %}" role="listitem">
+        <span class="kpi-k">失败</span>
+        <span class="kpi-v mono">{{ summary.failed }}</span>
+        <span class="kpi-h">截图或分析失败</span>
+      </div>
+      <div class="kpi-cell{% if summary.high %} hot high{% endif %}" role="listitem">
+        <span class="kpi-k">高风险</span>
+        <span class="kpi-v mono">{{ summary.high }}</span>
+        <span class="kpi-h">需立即处理</span>
+      </div>
+      <div class="kpi-cell{% if summary.medium %} hot medium{% endif %}" role="listitem">
+        <span class="kpi-k">中风险</span>
+        <span class="kpi-v mono">{{ summary.medium }}</span>
+        <span class="kpi-h">优先跟进</span>
+      </div>
+      <div class="kpi-cell{% if summary.low %} hot low{% endif %}" role="listitem">
+        <span class="kpi-k">低风险</span>
+        <span class="kpi-v mono">{{ summary.low }}</span>
+        <span class="kpi-h">持续观察</span>
+      </div>
+      <div class="kpi-cell" role="listitem">
+        <span class="kpi-k">巡检日期</span>
+        <span class="kpi-v mono date">{{ summary.inspected_at }}</span>
+        <span class="kpi-h">Asia/Shanghai</span>
+      </div>
+      <div class="kpi-cell" role="listitem">
+        <span class="kpi-k">成功率</span>
+        <span class="kpi-v mono">{{ summary.success_rate }}</span>
+        <span class="kpi-h">完成 / 检查项</span>
+      </div>
+      <div class="kpi-cell" role="listitem">
+        <span class="kpi-k">巡检耗时</span>
+        <span class="kpi-v">{{ summary.duration }}</span>
+        <span class="kpi-h">{{ summary.duration_hint }}</span>
+      </div>
+    </div>
+  </div>
+  {% if not summary.classified %}
+  <p class="note muted">风险等级暂按面板严重度回退。方舟综述未写入{% if summary.score_source == 'findings' %}，环境评分按已分析风险计算{% endif %}。</p>
+  {% endif %}
+  <article class="brief" aria-labelledby="brief-heading">
+    <h3 id="brief-heading">巡检总结</h3>
+    {% if summary_text %}
+    <p>{{ summary_text }}</p>
+    {% else %}
+    <p class="muted">尚未生成巡检总结。</p>
+    {% endif %}
+  </article>
+</section>
+
+<section class="block" id="risks" aria-labelledby="risks-heading">
+  <h2 id="risks-heading">2. 风险识别</h2>
+  <p class="kicker">先看分布，再点开具体风险。数量全部来自本轮 findings，不编造。</p>
+  <div class="chart-board pies">
+    <figure class="chart pie">
+      <figcaption>风险等级占比</figcaption>
+      {{ pie_svg }}
+      <ul class="legend">
+        <li><i class="sw high" aria-hidden="true"></i>高 {{ summary.high }}</li>
+        <li><i class="sw medium" aria-hidden="true"></i>中 {{ summary.medium }}</li>
+        <li><i class="sw low" aria-hidden="true"></i>低 {{ summary.low }}</li>
+      </ul>
+    </figure>
+    <figure class="chart pie">
+      <figcaption>面板状态</figcaption>
+      {{ status_svg }}
+      <ul class="legend">
+        <li><i class="sw high" aria-hidden="true"></i>异常 {{ summary.abnormal }}</li>
+        <li><i class="sw medium" aria-hidden="true"></i>告警 {{ summary.warning }}</li>
+        <li><i class="sw ok" aria-hidden="true"></i>正常 {{ summary.normal }}</li>
+        <li><i class="sw idle" aria-hidden="true"></i>无数据 {{ summary.no_data }}</li>
+      </ul>
+    </figure>
+  </div>
+  <figure class="chart bars layer-chart">
+    <figcaption>分层数量</figcaption>
+    {{ bar_svg }}
+    <ul class="legend">
+      <li><i class="sw high" aria-hidden="true"></i>高</li>
+      <li><i class="sw medium" aria-hidden="true"></i>中</li>
+      <li><i class="sw low" aria-hidden="true"></i>低</li>
+    </ul>
+  </figure>
+  <div class="chart-board metrics">
+    <figure class="chart bars">
+      <figcaption>严重度</figcaption>
+      {{ severity_svg }}
+      <ul class="legend">
+        <li><i class="sw high" aria-hidden="true"></i>P0 {{ summary.p0 }}</li>
+        <li><i class="sw medium" aria-hidden="true"></i>P1 {{ summary.p1 }}</li>
+        <li><i class="sw low" aria-hidden="true"></i>P2 {{ summary.p2 }}</li>
+      </ul>
+    </figure>
+    <figure class="chart bars">
+      <figcaption>巡检覆盖</figcaption>
+      {{ coverage_svg }}
+      <ul class="legend">
+        <li><i class="sw ok" aria-hidden="true"></i>已完成 {{ summary.done }}</li>
+        <li><i class="sw high" aria-hidden="true"></i>失败 {{ summary.failed }}</li>
+        <li><i class="sw idle" aria-hidden="true"></i>未完成 {{ summary.total - summary.done - summary.failed }}</li>
+      </ul>
+    </figure>
+  </div>
+  <h3 class="subhead">风险清单</h3>
+  {% if issues %}
+  <div class="risk-grid">
+    {% for item in issues %}
+    <article class="risk-card lv-{{ item.risk_level }}">
+      <header class="card-meta">
+        <span class="lv" aria-label="风险 {{ item.risk_level }}">{% if item.risk_level == 'high' %}高{% elif item.risk_level == 'medium' %}中{% else %}低{% endif %}</span>
+        <span class="status-chip">{{ item.status_label }}</span>
+      </header>
+      <h4>{{ item.panel_title }}</h4>
+      <p class="muted mono">panel {{ item.panel_id }} · {{ item.row_title }}</p>
+      {% if item.risk %}<p class="risk-copy">{{ item.risk }}</p>{% endif %}
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="empty-line">本轮未识别到告警或异常风险。</p>
+  {% endif %}
+  <table class="sr-only">
+    <caption>风险等级计数</caption>
+    <thead><tr><th>等级</th><th>数量</th></tr></thead>
+    <tbody>
+      <tr><td>高</td><td>{{ summary.high }}</td></tr>
+      <tr><td>中</td><td>{{ summary.medium }}</td></tr>
+      <tr><td>低</td><td>{{ summary.low }}</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="block" id="details" aria-labelledby="details-heading">
+  <h2 id="details-heading">3. 巡检详情</h2>
+  <p class="kicker">按 Grafana 看板行分层。每层先列风险表，再写影响分析。</p>
+  {% for layer in layers %}
+  <article class="layer" id="{{ layer.anchor }}">
+    <header class="layer-head">
+      <h3>{{ layer.name }}</h3>
+      <p class="muted mono">高 {{ layer.high }} · 中 {{ layer.medium }} · 低 {{ layer.low }}</p>
+    </header>
+    {% if layer.risks %}
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>面板</th>
+            <th>标题</th>
+            <th>等级</th>
+            <th>状态</th>
+            <th>图印</th>
+            <th>风险</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in layer.risks %}
+          <tr class="lv-{{ item.risk_level }}">
+            <td class="mono">{{ item.panel_id }}</td>
+            <td>{{ item.panel_title }}
+              {% if item.image_data %}
+              <details class="shot-fold">
+                <summary>查看截图</summary>
+                <figure class="shot">
+                  <img src="{{ item.image_data }}" alt="{{ item.panel_title }} 截图">
+                </figure>
+              </details>
+              {% endif %}
+            </td>
+            <td><span class="lv">{% if item.risk_level == 'high' %}高{% elif item.risk_level == 'medium' %}中{% else %}低{% endif %}</span></td>
+            <td>{{ item.status_label }}</td>
+            <td>
+              {% for value in item.printed_values %}
+              <span class="mono">{{ value.label }} {{ value.value }}</span>{% if not loop.last %} · {% endif %}
+              {% else %}
+              <span class="muted">无图印</span>
+              {% endfor %}
+            </td>
+            <td>{{ item.risk or "—" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="empty-line">本层未识别到风险。</p>
+    {% endif %}
+    {% if layer.failed %}
+    <ul class="queue">
+      {% for item in layer.failed %}
+      <li><span class="tag fail">失败</span> 面板 <span class="mono">{{ item.panelId }}</span> {{ item.title }} · {{ item.error.code }} · {{ item.error.message }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    <div class="impact">
+      <h4>影响分析</h4>
+      <p>{{ layer.analysis }}</p>
+    </div>
+  </article>
+  {% else %}
+  <p class="empty-line">没有可展示的看板分层。</p>
+  {% endfor %}
+</section>
+
+<section class="block" id="actions" aria-labelledby="actions-heading">
+  <h2 id="actions-heading">4. 行动建议</h2>
+  <p class="kicker">按优先级分组：必须修复、优先跟进、改进措施。优先级取关联风险的最高等级。</p>
+  {% if action_groups %}
+  {% for group in action_groups %}
+  <div class="action-group lv-{{ group.key }}">
+    <header class="group-head">
+      <h3>{{ group.title }}</h3>
+      <p class="muted">{{ group.hint }} · {{ group.count }} 条</p>
+    </header>
+    <div class="action-grid">
+      {% for item in group.actions %}
+      <article class="action-card">
+        <h4>{{ item.title }}</h4>
+        <p>{{ item.detail }}</p>
+        {% if item.panel_ids %}
+        <p class="muted mono">面板 {% for pid in item.panel_ids %}{{ pid }}{% if not loop.last %} · {% endif %}{% endfor %}</p>
+        {% endif %}
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+  {% else %}
+  <p class="empty-line">暂无行动建议。没有风险时保持观察即可。</p>
+  {% endif %}
+</section>
+
+<section class="block appendix" id="appendix" aria-labelledby="appendix-heading">
+  <h2 id="appendix-heading">附录</h2>
+  <p class="muted">模型 {{ model }}。精确数字必须来自图印或取证。由本地 bridge 渲染，单文件自包含。</p>
+  <details class="fold">
+    <summary>原始 Findings JSON</summary>
+    <pre>{{ findings_json }}</pre>
+  </details>
+</section>
+</body>
+</html>

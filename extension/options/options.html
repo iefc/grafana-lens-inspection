@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>Grafana Lens 选项</title>
+  <style>
+    body { font: 13px/1.5 -apple-system, sans-serif; margin: 16px; max-width: 480px; }
+    label { display: block; margin: 10px 0 4px; }
+    input { width: 100%; padding: 4px; box-sizing: border-box; }
+  </style>
+</head>
+<body>
+  <h2>Grafana Lens 选项</h2>
+  <label for="bridgeUrl">桥地址</label>
+  <input id="bridgeUrl" value="ws://127.0.0.1:9527/ws" />
+  <label for="token">配对 token（手动粘贴路径）</label>
+  <input id="token" placeholder="serve/pair 后粘贴" />
+  <p><button id="save" type="button">保存</button> <span id="saved"></span></p>
+  <script src="options.js" type="module"></script>
+</body>
+</html>

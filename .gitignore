@@ -1,0 +1,27 @@
+# macOS
+.DS_Store
+
+# 扩展开发私钥（公钥 key 字段可入库，私钥禁止）
+extension-dev.pem
+extension-dev.pub
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.pytest_cache/
+
+# 报告产物（含真实截图数据，按需保留本地，不入库）
+reports/*
+!reports/.gitkeep
+
+# 公开仓库排除项
+docs/
+.trae/documents/
+.omc/
+openspec/
+.trae/commands/
+.trae/skills/openspec-*/
+
+.kiro/
